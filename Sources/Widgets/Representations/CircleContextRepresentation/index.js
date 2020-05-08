@@ -73,7 +73,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
   };
 
   model.pipelines.circle.actor.getProperty().setOpacity(0.2);
-  model.pipelines.circle.mapper.setOrientationModeToDirection();
+  model.pipelines.circle.mapper.setOrientationModeToDirection(); // TODO: ToOrientation()... but need angles
   model.pipelines.circle.mapper.setResolveCoincidentTopology(true);
   model.pipelines.circle.mapper.setResolveCoincidentTopologyPolygonOffsetParameters(
     -1,
@@ -146,6 +146,9 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       typedArray.direction[i * 3 + 0] = orient[0];
       typedArray.direction[i * 3 + 1] = orient[1];
       typedArray.direction[i * 3 + 2] = orient[2];
+      const right = state.getRight();
+      const up = state.getUp();
+      const rotation = [...right, ...up, ...orient];
 
       const scale1 =
         (state.getScale1 ? state.getScale1() : model.defaultScale) / 2;
@@ -158,14 +161,7 @@ function vtkCircleContextRepresentation(publicAPI, model) {
       let scale3 = state.getScale3 ? state.getScale3() : [1, 1, 1];
       scale3 = scale3.map((x) => (x === 0 ? 2 * model.defaultScale : 2 * x));
 
-      vec3.transformMat4(
-        scale3,
-        scale3,
-        vtkMatrixBuilder
-          .buildFromDegree()
-          .rotateFromDirections([1, 0, 0], orient)
-          .getMatrix()
-      );
+      vec3.transformMat3(scale3, scale3, rotation);
 
       typedArray.scale[i * 3 + 0] = scale1 * sFactor * scale3[0];
       typedArray.scale[i * 3 + 1] = scale1 * sFactor * scale3[1];
